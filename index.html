@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Happy Birthday!</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold: #D4A847;
+      --rose: #E8607A;
+      --sage: #7CB998;
+      --cream: #FDF6EC;
+      --ink: #1A1410;
+      --muted: #7A6E65;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--cream);
+      overflow-x: hidden;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    /* Subtle grain texture via pseudo */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ===== Canvas ===== */
+    #confetti-canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    /* ===== Layout ===== */
+    .page {
+      position: relative;
+      z-index: 1;
+      width: min(540px, 92vw);
+      text-align: center;
+      padding: 3rem 2rem 4rem;
+    }
+
+    /* ===== Cake icon ===== */
+    .cake {
+      font-size: clamp(56px, 12vw, 80px);
+      line-height: 1;
+      display: block;
+      margin-bottom: 1.5rem;
+      animation: float 3s ease-in-out infinite;
+      user-select: none;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* ===== Headline ===== */
+    .eyebrow {
+      font-family: 'DM Sans', sans-serif;
+      font-size: clamp(11px, 2.5vw, 13px);
+      font-weight: 500;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 0.6rem;
+    }
+
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(42px, 10vw, 68px);
+      font-weight: 700;
+      line-height: 1.05;
+      color: var(--ink);
+      margin-bottom: 0.3rem;
+    }
+
+    h1 em {
+      display: block;
+      font-style: italic;
+      font-weight: 400;
+      color: var(--rose);
+    }
+
+    /* ===== Divider ===== */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 1.8rem auto;
+      width: 220px;
+    }
+
+    .divider-line {
+      flex: 1;
+      height: 1px;
+      background: var(--gold);
+      opacity: 0.4;
+    }
+
+    .divider-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--gold);
+      opacity: 0.6;
+    }
+
+    /* ===== Message ===== */
+    .message {
+      font-size: clamp(15px, 3.5vw, 17px);
+      line-height: 1.75;
+      color: var(--muted);
+      font-weight: 300;
+      max-width: 400px;
+      margin: 0 auto 2.2rem;
+    }
+
+    .message strong {
+      color: var(--ink);
+      font-weight: 500;
+    }
+
+    /* ===== Name badge ===== */
+    .name-badge {
+      display: inline-block;
+      background: var(--ink);
+      color: var(--cream);
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(18px, 4.5vw, 22px);
+      font-weight: 700;
+      padding: 0.55em 1.6em;
+      border-radius: 100px;
+      margin-bottom: 2.5rem;
+      letter-spacing: 0.02em;
+    }
+
+    /* ===== CTA Button ===== */
+    .btn {
+      display: inline-block;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--ink);
+      border: 1.5px solid var(--ink);
+      border-radius: 100px;
+      padding: 0.75em 2.2em;
+      cursor: pointer;
+      background: transparent;
+      transition: background 0.2s, color 0.2s, transform 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn:hover {
+      background: var(--ink);
+      color: var(--cream);
+    }
+
+    .btn:active {
+      transform: scale(0.96);
+    }
+
+    /* ===== Balloons row ===== */
+    .balloons {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 3rem;
+      font-size: clamp(24px, 5vw, 32px);
+      user-select: none;
+    }
+
+    .balloons span {
+      display: inline-block;
+      animation: sway 2.5s ease-in-out infinite;
+    }
+
+    .balloons span:nth-child(2) { animation-delay: 0.3s; }
+    .balloons span:nth-child(3) { animation-delay: 0.6s; }
+    .balloons span:nth-child(4) { animation-delay: 0.9s; }
+    .balloons span:nth-child(5) { animation-delay: 1.2s; }
+
+    @keyframes sway {
+      0%, 100% { transform: rotate(-6deg) translateY(0); }
+      50%  { transform: rotate(6deg) translateY(-6px); }
+    }
+
+    /* ===== Fade-in entrance ===== */
+    .page > * {
+      opacity: 0;
+      transform: translateY(18px);
+      animation: rise 0.55s forwards cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .cake             { animation-delay: 0.05s; }
+    .eyebrow          { animation-delay: 0.15s; }
+    h1                { animation-delay: 0.25s; }
+    .divider          { animation-delay: 0.35s; }
+    .message          { animation-delay: 0.42s; }
+    .name-badge       { animation-delay: 0.5s; }
+    .btn              { animation-delay: 0.58s; }
+    .balloons         { animation-delay: 0.68s; }
+
+    @keyframes rise {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== Pop burst overlay ===== */
+    .burst {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 20;
+    }
+
+    /* ===== Dark mode ===== */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --cream: #120E0A;
+        --ink: #F5EFE6;
+        --muted: #A09488;
+      }
+      .name-badge { background: var(--ink); color: var(--cream); }
+      .btn { border-color: var(--ink); color: var(--ink); }
+      .btn:hover { background: var(--ink); color: var(--cream); }
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="confetti-canvas"></canvas>
+
+  <main class="page" role="main">
+    <span class="cake" aria-label="birthday cake">🎂</span>
+    <p class="eyebrow">Wishing you a wonderful</p>
+    <h1>Happy<em>Birthday!</em></h1>
+
+    <div class="divider" aria-hidden="true">
+      <span class="divider-line"></span>
+      <span class="divider-dot"></span>
+      <span class="divider-dot"></span>
+      <span class="divider-dot"></span>
+      <span class="divider-line"></span>
+    </div>
+
+    <p class="message">
+      On this very special day, may every moment be filled with <strong>joy, laughter,</strong> and all the things that make you smile. Here's to <strong>another amazing year!</strong>
+    </p>
+
+    <div class="name-badge">🎉 You're a Star Pandu 🎉</div>
+
+    <button class="btn" id="celebrate-btn" aria-label="Celebrate with confetti">✨ Celebrate!</button>
+
+    <div class="balloons" aria-hidden="true">
+      <span>🎈</span><span>🎀</span><span>🎊</span><span>🎁</span><span>🎈</span>
+    </div>
+  </main>
+
+  <script>
+    /* ======= Confetti Engine ======= */
+    const canvas = document.getElementById('confetti-canvas');
+    const ctx = canvas.getContext('2d');
+    let W, H, particles = [], running = false, animId;
+
+    const COLORS = ['#D4A847','#E8607A','#7CB998','#6AAAD4','#C97BD4','#E8B460','#5BCFB0'];
+
+    function resize() {
+      W = canvas.width  = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    function rand(a, b) { return a + Math.random() * (b - a); }
+
+    function makeParticle(x, y, burst) {
+      return {
+        x, y,
+        vx: burst ? rand(-6, 6) : rand(-2.5, 2.5),
+        vy: burst ? rand(-14, -4) : rand(-3, -1),
+        w: rand(8, 14),
+        h: rand(4, 8),
+        r: rand(0, Math.PI * 2),
+        rSpeed: rand(-0.15, 0.15),
+        color: COLORS[Math.floor(Math.random() * COLORS.length)],
+        alpha: 1,
+        gravity: burst ? 0.35 : 0.1,
+        drag: 0.99
+      };
+    }
+
+    function spawnRain() {
+      for (let i = 0; i < 6; i++) {
+        particles.push(makeParticle(rand(0, W), rand(-20, 0), false));
+      }
+    }
+
+    function spawnBurst() {
+      const cx = W / 2, cy = H * 0.4;
+      for (let i = 0; i < 120; i++) {
+        particles.push(makeParticle(cx + rand(-20, 20), cy, true));
+      }
+    }
+
+    function tick() {
+      ctx.clearRect(0, 0, W, H);
+      if (running && particles.length < 300) spawnRain();
+
+      particles = particles.filter(p => p.alpha > 0.02);
+
+      particles.forEach(p => {
+        p.vy += p.gravity;
+        p.vx *= p.drag;
+        p.vy *= p.drag;
+        p.x  += p.vx;
+        p.y  += p.vy;
+        p.r  += p.rSpeed;
+        if (p.y > H + 20) { p.alpha = 0; return; }
+        if (p.y > H * 0.7) p.alpha -= 0.012;
+
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.r);
+        ctx.globalAlpha = Math.max(0, p.alpha);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        ctx.restore();
+      });
+
+      animId = requestAnimationFrame(tick);
+    }
+
+    function startConfetti() {
+      if (!running) {
+        running = true;
+        spawnBurst();
+        if (!animId) tick();
+        setTimeout(stopConfetti, 5000);
+      }
+    }
+
+    function stopConfetti() {
+      running = false;
+      setTimeout(() => {
+        if (!running) {
+          cancelAnimationFrame(animId);
+          animId = null;
+          particles = [];
+          ctx.clearRect(0, 0, W, H);
+        }
+      }, 3000);
+    }
+
+    /* Auto-launch on load */
+    window.addEventListener('load', () => {
+      setTimeout(() => startConfetti(), 800);
+    });
+
+    /* Button */
+    document.getElementById('celebrate-btn').addEventListener('click', () => {
+      if (running) { running = false; }
+      particles = [];
+      animId = null;
+      startConfetti();
+    });
+  </script>
+</body>
+</html>
